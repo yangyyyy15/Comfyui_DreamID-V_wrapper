@@ -20,6 +20,9 @@ from PIL import Image
 from torchvision.transforms import functional as TVF
 from torchvision.transforms.functional import InterpolationMode, to_tensor
 from einops import rearrange
+####新增####
+from torchvision.transforms import InterpolationMode
+####新增####
 
 
 class Rearrange:
@@ -81,6 +84,22 @@ class AreaResize:
 
         resized_height, resized_width = round(height * scale), round(width * scale)
 
+####新增####
+        _interpolation = self.interpolation
+        if isinstance(_interpolation, str):
+            # 常见的映射转换
+            interp_map = {
+                "nearest": InterpolationMode.NEAREST,
+                "bilinear": InterpolationMode.BILINEAR,
+                "bicubic": InterpolationMode.BICUBIC,
+                "area": InterpolationMode.AREA,
+                "nearest-exact": InterpolationMode.NEAREST_EXACT,
+            }
+            # 如果字符串在映射表里就用映射的，否则默认用 BICUBIC
+            _interpolation = interp_map.get(_interpolation.lower(), InterpolationMode.BICUBIC)
+####新增####
+
+
         if isinstance(image, list) and isinstance(image[0], Image.Image):
             image = torch.stack(
                 [
@@ -88,7 +107,10 @@ class AreaResize:
                         TVF.resize(
                             _image,
                             size=(resized_height, resized_width),
-                            interpolation=self.interpolation,
+####新增####
+                            #interpolation=self.interpolation,
+                            interpolation=_interpolation,
+####新增####
                         )
                     )
                     for _image in image
@@ -98,7 +120,10 @@ class AreaResize:
             image = TVF.resize(
                 image,
                 size=(resized_height, resized_width),
-                interpolation=self.interpolation,
+####新增####
+                #interpolation=self.interpolation,
+                 interpolation=_interpolation,
+####新增####
             )
             if isinstance(image, Image.Image):
                 image = to_tensor(image)
